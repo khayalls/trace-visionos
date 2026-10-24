@@ -1,0 +1,5 @@
+// Public defaults. Set your own identifiers in LocalSigning.xcconfig.
+DEVELOPMENT_TEAM =
+TRACE_BUNDLE_IDENTIFIER = com.example.trace
+TRACE_UI_TEST_BUNDLE_IDENTIFIER = com.example.trace.uitests
+#include? "LocalSigning.xcconfig"

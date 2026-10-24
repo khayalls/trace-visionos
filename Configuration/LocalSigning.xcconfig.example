@@ -1,0 +1,4 @@
+// Copy to LocalSigning.xcconfig; enter your own Apple team and unique identifiers.
+DEVELOPMENT_TEAM =
+TRACE_BUNDLE_IDENTIFIER = com.example.trace
+TRACE_UI_TEST_BUNDLE_IDENTIFIER = com.example.trace.uitests

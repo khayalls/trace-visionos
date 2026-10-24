@@ -1,0 +1,28 @@
+{
+  "asset": "Human hand meshes with nails",
+  "author": "DigitalN8m4r3 / Miodrag Sejic",
+  "license": "CC0 1.0 Universal",
+  "repository": "https://github.com/GodotVR/godot-xr-tools",
+  "revision": "6c6189bdfcdf855052ef1aeb9f3e0ec4c7a7eb60",
+  "sourceDirectory": "addons/godot-xr-tools/hands/",
+  "modifications": [
+    "Coordinate conversion and ARKit joint-name mapping",
+    "One Loop subdivision pass with welded position seams and interpolated skin weights",
+    "Fixed-buffer retargeting from measured joints; no source animation imported",
+    "Wrist-opacity atlas generated in the model skin UVs",
+    "Original anatomical buffers preserved unchanged for the black-hand revision",
+    "Skin color and skin-normal textures removed from the app bundle",
+    "Generated matte charcoal color gradient and extended quintic wrist-opacity gradient",
+    "Runtime wrist-base extension into a short forearm, driven by measured forearm joints; authored palms and fingers above 28 mm preserved"
+  ],
+  "files": {
+    "Documentation/ThirdParty/HandSource/Hand_Nails_L.gltf": {
+      "source": "model/Hand_Nails_L.gltf",
+      "sha256": "cbb72c5fa29ce50c3289a4394161ab8a8bb732a0e8427f0a345906340e1f9311"
+    },
+    "Documentation/ThirdParty/HandSource/Hand_Nails_R.gltf": {
+      "source": "model/Hand_Nails_R.gltf",
+      "sha256": "88e6d161e997ffb9f8c98d56496671c3811c2e94abaa8d154708ad506db4d96e"
+    }
+  }
+}

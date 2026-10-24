@@ -1,0 +1,56 @@
+.DS_Store
+.build/
+.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Personal signing, credentials, and environment files
+Configuration/LocalSigning.xcconfig
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
+*.provisionprofile
+Secrets/
+secrets/
+credentials.json
+service-account*.json
+AuthKey_*.p8
+id_rsa*
+id_ed25519*
+*.jks
+*.keystore
+
+# Builds, archives, local logs, and diagnostic reports
+Builds/
+build/
+*.app/
+*.ipa
+*.xcarchive/
+*.xcresult/
+*.dSYM/
+*.log
+Documentation/Logs/
+*.trace/
+*.crash
+*.ips
+
+# Wearer recordings and local exports must never be source assets
+Takes/
+Recordings/
+Captures/
+Exports/
+Private/
+private/
+
+# Local tooling
+__pycache__/
+*.pyc
+.venv/

@@ -1,0 +1,157 @@
+{
+  "project": "TRACE \u2014 The Motion Chamber",
+  "auditDate": "2026-10-24",
+  "toolchain": {
+    "xcode": "27.1 (27A9275)",
+    "sdk": "visionOS 27.0",
+    "deploymentTarget": "visionOS 2.0"
+  },
+  "coreTests": {
+    "passed": 25,
+    "failed": 0,
+    "host": "macOS arm64",
+    "coverage": [
+      "stage reference and head-motion independence",
+      "yaw placement",
+      "position and quaternion interpolation",
+      "endpoint clamping",
+      "joint and hand tracking loss",
+      "long-gap hiding",
+      "capture time cap and hand selection",
+      "nonmonotonic timestamps",
+      "schema validation",
+      "sample labeling",
+      "atomic persistence round-trip and deletion",
+      "corrupt-file isolation",
+      "hand skin vertex and index bounds",
+      "finite positions and unit normals for both hands",
+      "deformation driven by measured finger points",
+      "whole-hand tracking loss hides every surface section",
+      "hand texture coordinates remain in bounds",
+      "exact anatomical bind-pose round-trip for left and right hand meshes",
+      "orthonormal tangent frames and valid skin UVs after deformation",
+      "forearm direction follows measured arm points without moving the palm and fingers",
+      "ARKit-inferred transforms keep complete skin visible when joints are uncertain",
+      "fully clenched left and right fists with all joint confidence flags false",
+      "continuous finger curling through palm normal without 180-degree frame flips",
+      "missing transforms and implausible bone lengths reject the whole skin without exposed sections",
+      "playback preserves inferred transforms while retaining low-confidence flags",
+      "inferred-only captured takes remain valid without promoting joint confidence"
+    ]
+  },
+  "simulator": {
+    "runtime": "visionOS 27.0 (24M362)",
+    "build": "passed",
+    "uiTest": "passed again from exported public source with generic bundle identifiers and no local signing file",
+    "testCount": 1,
+    "failures": 0,
+    "dataSource": "explicitly labeled synthetic sample",
+    "covered": [
+      "entry and exit",
+      "sample loading",
+      "play and pause",
+      "timeline stepping through scrub binding",
+      "0.5x speed selection",
+      "replay",
+      "countdown cancellation",
+      "early recording stop",
+      "automatic 10-second stop",
+      "restore study after process relaunch",
+      "separate Record and Playback modes",
+      "secondary options navigation",
+      "left and both hand selection",
+      "individual countdown and finish control accessibility",
+      "automatic recording preserves the full 10.0-second take at render-driven cadence"
+    ]
+  },
+  "physicalDevice": {
+    "priorSignedBuild": "passed",
+    "priorInstallation": "passed",
+    "priorLaunch": "passed; wearer confirmed app opened",
+    "handTrackingAndOcclusion": "additional physical testing required",
+    "comfortLatencyAndFrameRate": "not measured",
+    "privacyAuditChanges": "source packaging and signing configuration only; no device deployment performed during audit"
+  },
+  "visualQA": {
+    "method": "direct simctl display capture; visually inspected",
+    "image": "Images/chamber-simulator.png",
+    "observations": [
+      "anatomical source buffers unchanged; palm and finger coordinates above 28 mm preserved",
+      "soft diffuse gray palm shading and black fingertips; no skin color or skin-normal maps",
+      "wrist base extended into a short forearm; no visible wrist cutoff",
+      "continuous 170 mm bind-pose opacity fade from 145 mm below wrist to 25 mm above wrist; closed end fully transparent",
+      "white studio and existing Record/Playback controls preserved",
+      "continuous curled finger frames checked after tracking fix; all hand sections remain intact with inferred joint transforms in core regression"
+    ],
+    "additionalImages": [
+      "Images/hands-detail-simulator.png",
+      "Images/hands-flexed-simulator.png",
+      "Images/record-simulator.png",
+      "Images/welcome-simulator.png"
+    ]
+  },
+  "handModel": {
+    "type": "generic anatomical model retargeted from measured joint positions",
+    "assetSource": "CC0 Godot XR Tools hand meshes by Miodrag Sejic",
+    "provenance": "ThirdParty/Hands-Provenance.json",
+    "derivedVerticesPerHandBeforeSections": 7382,
+    "trianglesPerHand": 13632,
+    "retargeting": "joint-segment positions and palm-plane frames with source skin weights",
+    "wearerSpecificScan": false,
+    "independentAxialFingerRollReconstruction": false,
+    "material": {
+      "finish": "matte with soft gray palms, black fingertips, continuous wrist-to-forearm fade",
+      "skinColorTexture": false,
+      "skinNormalTexture": false,
+      "wristFadeBindPoseMeters": 0.17,
+      "gradientCurve": "quintic smootherstep",
+      "atlasResolution": 1024,
+      "fadeStartRelativeToWristMeters": -0.145,
+      "fadeEndRelativeToWristMeters": 0.025,
+      "palmAndFingersAbove28mmUnchangedFromRevision": 4,
+      "wristBaseExtensionMeters": 0.15
+    },
+    "shapeSHA256": {
+      "LeftHand.json": "0ec2d217d3ba66705b6f7d3132c5fb565b26879ee6dcb04b78f3a06c0ada1c80",
+      "RightHand.json": "483785cc924e4f6d8a0c1872492f5e2a542715bde4f8d68cd3fa9421404d99fa"
+    }
+  },
+  "trackingFixes": {
+    "displayClock": "RealityKit rendering-phase System",
+    "displayPredictionSeconds": 0.011,
+    "capture": "unpredicted stream, no more than 60 samples per second; confidence preserved",
+    "jointOcclusion": "use ARKit inferred transforms; do not remove finger sections",
+    "malformedPose": "reject incomplete/implausible complete skin",
+    "wholeHandLoss": "display-only hold up to 100 ms, then fade for 50 ms; recordings retain actual loss",
+    "fingerFrames": "preserve hinge axis through curl to avoid palm-normal singularity",
+    "vertexUploads": "replace full buffer only when pose changes; update part counts only on visibility changes",
+    "limitations": [
+      "cannot recover a hand fully hidden from the sensors",
+      "does not track another person\u2019s hands",
+      "actual headset FPS and occlusion recovery await wearer retest"
+    ]
+  },
+  "limitations": [
+    "Xcode immersive-slider drag synthesis returned zero coordinates; accessible stepping tested instead",
+    "XCUITest screenshot API returned 1x1 placeholders; direct simulator screenshot used",
+    "drag handle and practice feedback need physical input validation",
+    "no two-handed scaling or rotation",
+    "no audio, video export, trail selection, cloud sharing, or scientific accuracy score"
+  ],
+  "publicationAudit": {
+    "rawBuildAndDeviceLogs": "excluded",
+    "signedAppAndProvisioningProfile": "excluded",
+    "personalSigningSettings": "ignored local xcconfig only; public defaults generic",
+    "pngMetadata": "removed from all 8 PNGs; compressed pixel payloads unchanged",
+    "privacyBuildAndTests": {
+      "coreTestsPassed": 25,
+      "coreTestFailures": 0,
+      "simulatorBuild": "passed",
+      "publicSourceSimulatorUITestsPassed": 1,
+      "publicSourceSimulatorUITestFailures": 0,
+      "publicBundleIdentifier": "com.example.trace",
+      "localSigningFileInPublicSource": false,
+      "physicalDeploymentDuringAudit": false
+    }
+  }
+}
