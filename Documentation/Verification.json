@@ -152,6 +152,18 @@
       "publicBundleIdentifier": "com.example.trace",
       "localSigningFileInPublicSource": false,
       "physicalDeploymentDuringAudit": false
+    },
+    "githubPublication": {
+      "repository": "https://github.com/khayalls/trace-visionos",
+      "sourceRootCommit": "953a006ba38a8275a5a1dc872c5a8760ad726d52",
+      "originalInitialCommitInMainHistory": false,
+      "authorAndCommitterAlias": "khayalls",
+      "githubNoreplyEmails": true,
+      "publicFileCount": 53,
+      "ignoredSigningFilePublished": false,
+      "activeGithubWorkflow": false,
+      "workflowTemplate": "Documentation/Tools/privacy-workflow.yml",
+      "workflowLimitation": "publishing credentials lack workflow-write permission; local checks passed"
     }
   }
 }
