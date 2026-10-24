@@ -163,7 +163,8 @@
       "ignoredSigningFilePublished": false,
       "activeGithubWorkflow": false,
       "workflowTemplate": "Documentation/Tools/privacy-workflow.yml",
-      "workflowLimitation": "publishing credentials lack workflow-write permission; local checks passed"
+      "workflowLimitation": "publishing credentials lack workflow-write permission; local checks passed",
+      "oldUnreferencedCommitStillResolvesBySHA": true
     }
   }
 }

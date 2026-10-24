@@ -54,6 +54,8 @@ With the repository owner's explicit approval, `main` was replaced using a lease
 
 GitHub's API confirmed all 53 public files, no personal signing file, no active workflow, and only the `main` branch. The original initial commit is absent from `main` history. Subsequent audit-documentation commits use the same public identity. The inactive workflow template remains available for later activation with appropriate workflow-write permission.
 
+A direct API check after replacement still resolved the old, unreferenced commit by its exact SHA. It is absent from `main`, but has not been purged from GitHub's retained objects. This audit does not claim complete erasure of that old commit.
+
 Replacing branch history cannot erase copies already cloned or all cached commit views. GitHub explains these limits in its [sensitive-data removal guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository). GitHub also documents [commit email privacy](https://docs.github.com/en/account-and-profile/concepts/email-addresses).
 
 ## Limits
