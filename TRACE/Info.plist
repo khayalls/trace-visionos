@@ -13,11 +13,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1</string>
+	<string>0.2</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSHandsTrackingUsageDescription</key>
-	<string>TRACE uses hand joints to visualize your hands and record movements you choose to capture. Joint data stays on this device. No video or audio is recorded.</string>
+	<string>TRACE uses hand joints to display your hands and record movements you choose to capture. Studies stay on this device unless you export them. No video or audio is recorded.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

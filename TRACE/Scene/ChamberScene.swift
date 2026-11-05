@@ -8,6 +8,10 @@ final class ChamberScene {
     let root = Entity()
     let stage = Entity()
     let playbackRoot = Entity()
+    private let playbackContent = Entity()
+    private let pathRoot = Entity()
+    private var replayCenter = SIMD3<Float>.zero
+    var inspectionCenter: SIMD3<Float> { replayCenter }
     let consoleMount = Entity()
     let introMount = Entity()
     let counterMount = Entity()
@@ -23,6 +27,8 @@ final class ChamberScene {
     private var lastTrail = 0.0
     private var revealAt = 0.0
     private var ringState = -1
+    private var countdownDigits: [Int: ModelEntity] = [:]
+    private var interactionEnabled = false
     static let handBlue = UIColor(white: 0.82, alpha: 1)
     static let handPearl = UIColor(white: 0.92, alpha: 1)
     static let graphite = UIColor(red: 0.086, green: 0.09, blue: 0.098, alpha: 1)
@@ -36,6 +42,7 @@ final class ChamberScene {
         root.name = "Motion Chamber"; stage.name = "Stable stage reference"; playbackRoot.name = "Recorded sculpture"
         root.addChild(architecture); root.addChild(stage)
         stage.addChild(playbackRoot); stage.addChild(consoleMount); stage.addChild(introMount); stage.addChild(counterMount)
+        playbackRoot.addChild(playbackContent); playbackContent.addChild(pathRoot)
         stage.addChild(pulseRing); pulseRing.position.y = 0.006
         stage.addChild(orbitRing); orbitRing.position.y = 0.006
         buildArchitecture()
@@ -43,17 +50,25 @@ final class ChamberScene {
             let live = HandRig(side: side, color: side == .left ? Self.handBlue : Self.handPearl, ghost: false)
             let ghost = HandRig(side: side, color: side == .left ? Self.handBlue : Self.handPearl, ghost: true)
             liveRigs[side] = live; ghostRigs[side] = ghost
-            stage.addChild(live.root); playbackRoot.addChild(ghost.root)
+            stage.addChild(live.root); playbackContent.addChild(ghost.root)
         }
         // A small native gaze/pinch drag target below the sculpture.
         handle.model = ModelComponent(mesh: Self.torus(radius: 0.042, tube: 0.007), materials: [Self.surface(UIColor(white: 0.48, alpha: 1), emission: 0)])
-        handle.position = [0, 0.76, 0.06]
+        handle.position = [0.42, 1.5, 0]
         handle.orientation = simd_quatf(angle: .pi / 2, axis: [1, 0, 0])
         handle.components.set(InputTargetComponent())
         handle.components.set(CollisionComponent(shapes: [.generateSphere(radius: 0.07)]))
         handle.components.set(HoverEffectComponent())
-        handle.name = "Move sculpture"
-        playbackRoot.addChild(handle)
+        handle.name = "Turn and move recording"
+        stage.addChild(handle)
+        if #available(visionOS 26.0, *) {
+            var manipulation = ManipulationComponent()
+            manipulation.releaseBehavior = .stay
+            manipulation.audioConfiguration = .none
+            playbackRoot.components.set(manipulation)
+            handle.components.set(ManipulationComponent.HitTarget(redirectedEntity: playbackRoot))
+        }
+        buildCountdown()
         reset()
     }
     func reset() {
@@ -68,18 +83,61 @@ final class ChamberScene {
         positionAttachments(eyeHeight: eyeHeight)
     }
     private func positionAttachments(eyeHeight: Float) {
-        consoleMount.position = [0, max(0.55, eyeHeight - 0.38), -0.60]
+        consoleMount.position = [0, max(0.55, eyeHeight - 0.50), -0.60]
         introMount.position = [0, eyeHeight + 0.1, -0.75]
-        counterMount.position = [0, eyeHeight - 0.03, -0.1]
+        counterMount.position = [0, eyeHeight + 0.18, -0.65]
     }
-    func resetPlaybackTransform() { playbackRoot.transform = .identity }
+    func resetPlaybackTransform() { playbackRoot.transform = Transform(translation: replayCenter) }
+    func setInspection(yaw: Double, pitch: Double, scale: Double) {
+        playbackRoot.orientation = InspectionTransform.rotation(yaw: yaw, pitch: pitch)
+        playbackRoot.scale = SIMD3(repeating: Float(min(max(scale, 0.5), 2)))
+    }
+    func configureStudy(_ take: MotionTake) {
+        replayCenter = MotionAnalysis.center(take)
+        playbackContent.position = -replayCenter
+        resetPlaybackTransform()
+        pathRoot.children.removeAll()
+        for side in HandSide.allCases where take.selection.includes(side) {
+            let segments = MotionAnalysis.paths(take, side: side)
+            if let mesh = Self.pathMesh(segments) {
+                let color = side == .left ? Self.coral : UIColor(white: 0.28, alpha: 1)
+                let entity = ModelEntity(mesh: mesh, materials: [Self.surface(color)])
+                entity.name = side.rawValue + " index fingertip path"; pathRoot.addChild(entity)
+            }
+        }
+        pathRoot.isEnabled = false
+    }
+    func showPaths(_ visible: Bool) { pathRoot.isEnabled = visible }
+    private func buildCountdown() {
+        for number in 1...3 {
+            let mesh = MeshResource.generateText(String(number), extrusionDepth: 0.012,
+                font: .systemFont(ofSize: 0.24, weight: .medium), containerFrame: .zero, alignment: .center)
+            let entity = ModelEntity(mesh: mesh, materials: [Self.surface(UIColor(white: 0.09, alpha: 1))])
+            let bounds = entity.visualBounds(relativeTo: entity)
+            entity.position = -bounds.center
+            entity.name = "Countdown \(number)"; entity.isEnabled = false
+            counterMount.addChild(entity); countdownDigits[number] = entity
+        }
+        counterMount.isEnabled = false
+    }
+    func showCountdown(_ number: Int?) {
+        counterMount.isEnabled = number != nil
+        for (value, entity) in countdownDigits { entity.isEnabled = value == number }
+    }
+    private func setInteraction(_ enabled: Bool) {
+        handle.isEnabled = enabled
+        guard enabled != interactionEnabled else { return }
+        interactionEnabled = enabled
+        // Only the visible ring takes input. A large invisible collider around
+        // both hands would intercept gaze meant for the console behind them.
+    }
     func clearTrails() { liveRigs.values.forEach { $0.clearTrail() }; ghostRigs.values.forEach { $0.clearTrail() } }
     func clearMotion() {
         liveRigs.values.forEach { $0.hide() }; ghostRigs.values.forEach { $0.hide() }
-        handle.isEnabled = false; clearTrails()
+        setInteraction(false); showCountdown(nil); pathRoot.isEnabled = false; clearTrails()
     }
     func revealGhosts(reduceMotion: Bool) { revealAt = reduceMotion ? 0 : ProcessInfo.processInfo.systemUptime }
-    func update(live: [HandPose], ghost: [HandPose], recording: Bool, countdown: Bool, playing: Bool, practice: Bool, now: Double, reduceMotion: Bool) -> (near: Int, total: Int) {
+    func update(live: [HandPose], ghost: [HandPose], recording: Bool, countdown: Bool, playing: Bool, practice: Bool, now: Double, reduceMotion: Bool, allowManipulation: Bool = true, showGhostHands: Bool = true) -> (near: Int, total: Int) {
         let state = recording ? 2 : (countdown ? 1 : 0)
         if state != ringState {
             pulseRing.model?.materials = [Self.surface(state == 2 ? Self.coral : UIColor(white: 0.82, alpha: 1), emission: 0)]
@@ -104,15 +162,42 @@ final class ChamberScene {
                 }
             }
             liveRigs[side]?.update(actual, now: now, trail: addTrail && (recording || ghost.isEmpty) && !reduceMotion, highlights: nearNames)
-            ghostRigs[side]?.update(reference, now: now, trail: addTrail && playing && !reduceMotion, highlights: [])
+            ghostRigs[side]?.update(showGhostHands ? reference : .missing(side), now: now, trail: addTrail && playing && !reduceMotion, highlights: [])
         }
         if revealAt > 0 {
             let t = min(max((now - revealAt) / 0.5, 0), 1)
             playbackRoot.components.set(OpacityComponent(opacity: Float(t)))
             if t >= 1 { revealAt = 0 }
         } else { playbackRoot.components.set(OpacityComponent(opacity: 1)) }
-        handle.isEnabled = !ghost.isEmpty && !practice
+        handle.position = playbackRoot.position + [0.42, 0.05, 0]
+        setInteraction(!ghost.isEmpty && !practice && allowManipulation)
         return (near, total)
+    }
+    private static func pathMesh(_ paths: [[SIMD3<Float>]]) -> MeshResource? {
+        var positions: [SIMD3<Float>] = [], normals: [SIMD3<Float>] = [], indices: [UInt32] = []
+        let sides = 6, radius: Float = 0.0015
+        for path in paths where path.count > 1 {
+            let base = positions.count
+            for i in path.indices {
+                let delta = path[min(i+1,path.count-1)] - path[max(i-1,0)]
+                let tangent = simd_length(delta) > 0.00001 ? simd_normalize(delta) : SIMD3<Float>(0,1,0)
+                let hint: SIMD3<Float> = abs(tangent.y) < 0.9 ? [0,1,0] : [1,0,0]
+                let x = simd_normalize(simd_cross(tangent,hint)), y = simd_cross(tangent,x)
+                for side in 0..<sides {
+                    let angle = Float(side)*2*Float.pi/Float(sides), normal = x*cos(angle)+y*sin(angle)
+                    positions.append(path[i]+normal*radius); normals.append(normal)
+                    if i < path.count-1 {
+                        let a = UInt32(base+i*sides+side), b = UInt32(base+i*sides+(side+1)%sides)
+                        let c = a+UInt32(sides), d = b+UInt32(sides)
+                        indices += [a,b,c,b,d,c]
+                    }
+                }
+            }
+        }
+        guard !positions.isEmpty else { return nil }
+        var descriptor = MeshDescriptor(name: "Measured fingertip paths")
+        descriptor.positions = .init(positions); descriptor.normals = .init(normals); descriptor.primitives = .triangles(indices)
+        return try? MeshResource.generate(from: [descriptor])
     }
     private func buildArchitecture() {
         architecture.name = "White studio"

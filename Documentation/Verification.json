@@ -1,5 +1,5 @@
 {
-  "project": "TRACE \u2014 The Motion Chamber",
+  "project": "TRACE - The Motion Chamber",
   "auditDate": "2026-10-24",
   "toolchain": {
     "xcode": "27.1 (27A9275)",
@@ -7,7 +7,7 @@
     "deploymentTarget": "visionOS 2.0"
   },
   "coreTests": {
-    "passed": 25,
+    "passed": 35,
     "failed": 0,
     "host": "macOS arm64",
     "coverage": [
@@ -36,14 +36,23 @@
       "continuous finger curling through palm normal without 180-degree frame flips",
       "missing transforms and implausible bone lengths reject the whole skin without exposed sections",
       "playback preserves inferred transforms while retaining low-confidence flags",
-      "inferred-only captured takes remain valid without promoting joint confidence"
+      "inferred-only captured takes remain valid without promoting joint confidence",
+      "forward and reverse loop wrap with overshoot",
+      "region boundaries and nonfinite inputs",
+      "independent trimmed study with interpolated boundaries",
+      "confidence-preserving trim",
+      "measured wrist distance, segment speed, and frame coverage",
+      "path segmentation at inferred joints and long gaps",
+      "pivot-stable 360-degree rotation",
+      "JSON export round-trip",
+      "CSV units, timestamps, missing hands, confidence, and formula-safe joint names"
     ]
   },
   "simulator": {
     "runtime": "visionOS 27.0 (24M362)",
     "build": "passed",
-    "uiTest": "passed again from exported public source with generic bundle identifiers and no local signing file",
-    "testCount": 1,
+    "uiTest": "3 XCTest cases passed with no failures on visionOS 27.0",
+    "testCount": 3,
     "failures": 0,
     "dataSource": "explicitly labeled synthetic sample",
     "covered": [
@@ -61,8 +70,20 @@
       "secondary options navigation",
       "left and both hand selection",
       "individual countdown and finish control accessibility",
-      "automatic recording preserves the full 10.0-second take at render-driven cadence"
-    ]
+      "automatic recording preserves the full 10.0-second take at render-driven cadence",
+      "view presets, four quarter turns, and reset",
+      "motion path toggle",
+      "loop in and out marking, reverse toggle, and selection copy",
+      "motion insights display",
+      "return to native export page",
+      "CSV and JSON file-picker presentation and cancellation"
+    ],
+    "uiTestCases": [
+      "testChamberRecordingPlaybackAndPersistence",
+      "testStudyInspectionLoopAndExport",
+      "testNativeCSVAndJSONExportPickers"
+    ],
+    "automationNote": "The immersive attachment query root can stay cached after a main-window handoff. The handoff is checked with a fresh accessibility snapshot; native picker interactions are tested in a separate launch."
   },
   "physicalDevice": {
     "priorSignedBuild": "passed",
@@ -70,7 +91,12 @@
     "priorLaunch": "passed; wearer confirmed app opened",
     "handTrackingAndOcclusion": "additional physical testing required",
     "comfortLatencyAndFrameRate": "not measured",
-    "privacyAuditChanges": "source packaging and signing configuration only; no device deployment performed during audit"
+    "privacyAuditChanges": "source packaging and signing configuration only; no device deployment performed during audit",
+    "priorVersion": "0.1 build 2",
+    "currentVersion": "0.2 build 3",
+    "currentHardwareCompile": "Release build passed for generic physical visionOS target, unsigned",
+    "currentInstallationAndLaunch": "not attempted",
+    "currentNativeRingGesturesAndComfort": "requires physical headset retest"
   },
   "visualQA": {
     "method": "direct simctl display capture; visually inspected",
@@ -81,14 +107,28 @@
       "wrist base extended into a short forearm; no visible wrist cutoff",
       "continuous 170 mm bind-pose opacity fade from 145 mm below wrist to 25 mm above wrist; closed end fully transparent",
       "white studio and existing Record/Playback controls preserved",
-      "continuous curled finger frames checked after tracking fix; all hand sections remain intact with inferred joint transforms in core regression"
+      "continuous curled finger frames checked after tracking fix; all hand sections remain intact with inferred joint transforms in core regression",
+      "single extruded dark countdown numeral, without a circle or surrounding captions",
+      "recording rotates around its own center; paths share the same display transform",
+      "ring sits beside the recording and is disabled while editing and exporting",
+      "console moved lower; ghost surfaces hidden in insights so values remain readable",
+      "native export page returns to the main window without duplicate reopen requests"
     ],
     "additionalImages": [
       "Images/hands-detail-simulator.png",
       "Images/hands-flexed-simulator.png",
       "Images/record-simulator.png",
       "Images/welcome-simulator.png"
-    ]
+    ],
+    "currentImages": [
+      "Images/studio-02.png",
+      "Images/countdown-02.png",
+      "Images/inspection-02.png",
+      "Images/loop-02.png",
+      "Images/insights-02.png",
+      "Images/export-02.png"
+    ],
+    "currentMethod": "Direct captures from an isolated simulator with synthetic data; all six images visually inspected; ancillary metadata removed without changing pixel payloads"
   },
   "handModel": {
     "type": "generic anatomical model retargeted from measured joint positions",
@@ -127,7 +167,7 @@
     "vertexUploads": "replace full buffer only when pose changes; update part counts only on visibility changes",
     "limitations": [
       "cannot recover a hand fully hidden from the sensors",
-      "does not track another person\u2019s hands",
+      "does not track another person’s hands",
       "actual headset FPS and occlusion recovery await wearer retest"
     ]
   },
@@ -136,7 +176,9 @@
     "XCUITest screenshot API returned 1x1 placeholders; direct simulator screenshot used",
     "drag handle and practice feedback need physical input validation",
     "no two-handed scaling or rotation",
-    "no audio, video export, trail selection, cloud sharing, or scientific accuracy score"
+    "no audio, video export, trail selection, cloud sharing, or scientific accuracy score",
+    "native manipulation gestures, physical tracking quality, comfort, and headset FPS have not been validated for 0.2",
+    "export format generation and native picker open/cancel are verified; no external cloud-provider upload was performed"
   ],
   "publicationAudit": {
     "rawBuildAndDeviceLogs": "excluded",
@@ -165,6 +207,22 @@
       "workflowTemplate": "Documentation/Tools/privacy-workflow.yml",
       "workflowLimitation": "publishing credentials lack workflow-write permission; local checks passed",
       "oldUnreferencedCommitStillResolvesBySHA": true
-    }
+    },
+    "currentSourceFileCount": 65,
+    "currentSecretFindings": 0,
+    "newScreenshotCount": 6,
+    "currentSigning": "generic public defaults; no local signing file in the publication set"
+  },
+  "version": "0.2",
+  "build": "3",
+  "verificationDate": "2026-11-05",
+  "updateFeatures": {
+    "countdown": "cached RealityKit text meshes for 3, 2, 1",
+    "inspection": "360-degree turn, tilt, size, presets, reset; native ring manipulation on visionOS 26 and later",
+    "review": "loop region, reverse playback, 0.25x/0.5x/1x/2x speed, save selection as a new study",
+    "paths": "measured index-fingertip paths split at inference or gaps over 150 ms",
+    "insights": "per-hand measured wrist travel, peak segment speed, tracked-frame coverage",
+    "export": "user-initiated CSV and JSON through system file exporter",
+    "research": "eight source-backed follow-up directions; no live robot control"
   }
 }

@@ -20,6 +20,12 @@ Studies are JSON files in the app's private container at `Library/Application Su
 
 Studies remain locally until deleted using **Saved studies → Delete study**, or until the app's data is removed. Deletion removes the app's study file; it is not a secure-erasure guarantee and does not remove copies in operating-system backups. TRACE uses normal app-container protections and does not add its own file encryption. Operating-system backup and device-management policies may apply. TRACE itself does not upload studies.
 
+## Exporting a study
+
+CSV and JSON export happens only when you choose a format and a destination in the system file picker. The exported copy contains hand-motion data and tracking flags; JSON also retains the study's creation date and generated ID. The destination may be local storage or a cloud-backed location you choose. TRACE has no automatic upload or networking client.
+
+The original study stays in the app. Deleting that study does not delete exported copies, and deleting an exported file does not delete the original. Turning or resizing a replay changes its display only; export retains the original stage coordinates.
+
 ## Development and publication
 
 Keep personal signing settings in ignored `Configuration/LocalSigning.xcconfig`. Keep recordings, signed app bundles, provisioning profiles, device logs, and diagnostic reports out of Git. The repository includes a publication guard and a credential-scanning workflow; these are checks, not a guarantee that arbitrary future files are safe to publish.

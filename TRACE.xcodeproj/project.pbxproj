@@ -319,6 +319,9 @@
 				<string>FBDC4F23F93125BBEEAE800C</string>
 				<string>A6BAD61A196A4F6B8E3FB9C5</string>
 				<string>AFA02FE84B913EF0D93D0402</string>
+				<string>719F4E4470EC29D82796ADE2</string>
+				<string>EE43AF41029450E14894A997</string>
+				<string>5568893E3BA65DF51C6ECAEF</string>
 			</array>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
@@ -343,6 +346,9 @@
 				<string>6804815BEF76F1133B3E7B5C</string>
 				<string>C27B8B2D87725FF360A1CA17</string>
 				<string>27EE6E9F876EA3068E628883</string>
+				<string>D389CB41FEE24A1B7E20187E</string>
+				<string>A9BB4A9542A037B59C9BBB60</string>
+				<string>3B7A2CCB13A08B95CE47B26C</string>
 			</array>
 			<key>runOnlyForDeploymentPostprocessing</key>
 			<integer>0</integer>
@@ -430,7 +436,7 @@
 				<key>MARKETING_VERSION</key>
 				<string>0.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>2</string>
+				<string>3</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -468,7 +474,7 @@
 				<key>MARKETING_VERSION</key>
 				<string>0.1</string>
 				<key>CURRENT_PROJECT_VERSION</key>
-				<string>2</string>
+				<string>3</string>
 				<key>LD_RUNPATH_SEARCH_PATHS</key>
 				<string>$(inherited) @executable_path/Frameworks</string>
 				<key>SWIFT_OPTIMIZATION_LEVEL</key>
@@ -843,6 +849,60 @@
 			<string>Configuration</string>
 			<key>sourceTree</key>
 			<string>&lt;group&gt;</string>
+		</dict>
+		<key>719F4E4470EC29D82796ADE2</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>TRACE/Core/StudyTools.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>D389CB41FEE24A1B7E20187E</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>719F4E4470EC29D82796ADE2</string>
+		</dict>
+		<key>EE43AF41029450E14894A997</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>TRACE/UI/StudyToolsPanel.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>A9BB4A9542A037B59C9BBB60</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>EE43AF41029450E14894A997</string>
+		</dict>
+		<key>5568893E3BA65DF51C6ECAEF</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXFileReference</string>
+			<key>lastKnownFileType</key>
+			<string>sourcecode.swift</string>
+			<key>path</key>
+			<string>TRACE/UI/ExportStudyView.swift</string>
+			<key>sourceTree</key>
+			<string>&lt;group&gt;</string>
+		</dict>
+		<key>3B7A2CCB13A08B95CE47B26C</key>
+		<dict>
+			<key>isa</key>
+			<string>PBXBuildFile</string>
+			<key>fileRef</key>
+			<string>5568893E3BA65DF51C6ECAEF</string>
 		</dict>
 	</dict>
 	<key>rootObject</key>

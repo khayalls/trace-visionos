@@ -1,37 +1,75 @@
-# TRACE — The Motion Chamber
+# TRACE
 
-A native visionOS app for Apple Vision Pro that records hand movements and replays them as interactive 3D motion sculptures. Built with SwiftUI, RealityKit, and ARKit.
+Record a hand movement. Turn it around, slow it down, and find the part worth keeping.
 
-![TRACE studio with synthetic simulator hands](Documentation/Images/chamber-simulator.png)
+TRACE is a native Apple Vision Pro motion studio built with SwiftUI, RealityKit, and ARKit. Version 0.2 adds a clearer countdown, 360-degree inspection, loop editing, fingertip paths, motion insights, and local file export.
 
-TRACE is an experimental prototype. Simulator and core regressions pass; physical-device installation and opening have been confirmed. Tracking under occlusion, comfort, latency, and headset frame rate still need physical validation. It is not a robotics controller, medical device, or calibrated motion-capture system.
+![TRACE motion studio with a synthetic sample](Documentation/Images/studio-02.png)
 
-## Features
+## A closer look
 
-- An immersive white studio with generic anatomical hands, soft gray palm shading, black fingertips, and smooth wrist fades.
-- Left, right, or both-hand capture: a three-second countdown and up to ten seconds of motion.
-- Playback with pause, replay, scrubbing, one-second steps, and 0.5×/1× speed.
-- Saved studies stored locally, restored after relaunch, and individually deletable.
-- A stable stage reference and a movable replay sculpture.
-- Experimental fingertip distance feedback for following a recorded study.
-- Explicitly labeled synthetic simulator samples; no wearer recordings are included.
-- Native accessibility labels and Reduce Motion support.
+| A countdown you can read | A view from every side |
+| :---: | :---: |
+| ![A single extruded countdown numeral above the studio](Documentation/Images/countdown-02.png) | ![The recording turned around with view controls](Documentation/Images/inspection-02.png) |
+| One large 3D digit, with no circle or clipped captions. | Turn, tilt, resize, or jump to another side. |
 
-## Requirements and setup
+| Keep a useful moment | See how the hand moved |
+| :---: | :---: |
+| ![Loop selection and reverse playback controls](Documentation/Images/loop-02.png) | ![Fingertip paths and per-hand motion measurements](Documentation/Images/insights-02.png) |
+| Set in and out points, then save a separate study. | Inspect complete paths and measured wrist movement. |
 
-The current project was verified with Xcode 27.1 and the visionOS 27.0 SDK. Its deployment target is visionOS 2.0; compatibility with every earlier runtime has not been separately tested. Hand tracking requires a physical Apple Vision Pro.
+These are screenshots of the running visionOS simulator. The hands and studies shown here are synthetic fixtures, not recordings of a person. Open an image to see the full resolution.
 
-1. Open `TRACE.xcodeproj` and select the **TRACE** scheme.
-2. For a simulator preview, select a visionOS simulator and run. Use **More → Load sample** to explore synthetic motion.
-3. For a physical headset, copy `Configuration/LocalSigning.xcconfig.example` to `Configuration/LocalSigning.xcconfig`. Enter your own Apple development team and unique app/test bundle identifiers there. The public defaults use `com.example.trace`; the local file is ignored by Git.
-4. Pair the headset with Xcode, enable Developer Mode on the headset, select it as the run destination, and run. Complete any Apple Account, device trust, or keychain prompts locally.
-5. Open **Enter studio** and allow Hand Tracking. Use the console's exit control to return to the launch window.
+## Use the studio
 
-There are no third-party runtime packages, API keys, backend services, or paid assets to configure. A signed app bundle and provisioning profile are deliberately excluded from this source distribution. Build your own signed app with your own team.
+1. Enter the studio and allow Hand Tracking on Vision Pro. Choose left, right, or both hands.
+2. Press **Record motion**. Three digits count down before a recording of up to ten seconds.
+3. In **Playback**, scrub, pause, or choose a slower speed. **View**, **Loop**, and **Insights** keep the review tools close without putting every setting on the main console.
+4. Save a selection or export a study when you are ready to use it elsewhere.
 
-## Run checks
+### Look around a recording
 
-From the project directory:
+On visionOS 26 and later, pinch the ring beside the recording. Move it with one hand, turn your hand to rotate it, or use both hands to rotate and resize. The recording stays where you release it.
+
+The **View** panel also gives you a full-turn control, tilt, size, recorded/opposite/side presets, quarter-turn buttons, and reset. These controls remain available on earlier supported visionOS versions. The pivot follows the recording's bounds, so turning it does not swing it around the floor origin. Live hands and saved coordinates stay separate from the display transform.
+
+### Work on a short section
+
+In **Loop**, scrub to a moment and choose **Set in** or **Set out**. Repeat the selection, play backwards, or use 0.25×, 0.5×, 1×, or 2× speed. **Save as new study** creates a separate take with rebased timestamps and preserves the original.
+
+### Understand the motion
+
+**Show fingertip paths** draws the full index-finger trajectory for each hand. The path stays visible when paused and turns with the recording. Tracking gaps and inferred points stay disconnected.
+
+**Insights** shows wrist travel, peak speed between samples, and the percentage of frames with a measured wrist. Inferred joints and gaps over 150 ms are excluded. Speed can be affected by tracking noise; the numbers are estimates, not a calibrated quality score.
+
+## Take the data with you
+
+![Native CSV and JSON export in the main window](Documentation/Images/export-02.png)
+
+Choose **Export CSV or JSON** in Insights, or **Export study** in More. TRACE returns to its main window and presents the system file picker after you choose a format.
+
+- **CSV** contains one row per supplied joint, with source, stage coordinate system, time in seconds, hand identity, tracking flags, position in meters, and quaternion components in xyzw order. Missing hands get explicit rows with empty transforms.
+- **JSON** preserves the complete study schema, including its creation date, generated ID, hand selection, frames, and confidence flags.
+
+Turning, moving, or enlarging the replay does not change exported coordinates. To export only a section, save that selection as a new study first. See [the export format](Documentation/ExportFormat.md) for field definitions and examples.
+
+## Where the data lives
+
+Studies stay in the app's local container until deleted. TRACE has no networking client, account, analytics SDK, camera-frame capture, audio recording, or automatic upload. Export is a deliberate action; the system lets you choose a local or cloud-backed destination. Operating-system backup policies may also apply. [Privacy details](PRIVACY.md).
+
+The hand models are generic CC0 assets, not scans of the wearer. Simulator samples are labeled synthetic. No wearer recordings, signed app bundles, provisioning profiles, or raw device logs are included in this repository.
+
+## Build it
+
+The update was built with Xcode 27.1 and the visionOS 27.0 SDK. The deployment target remains visionOS 2.0. Native object manipulation requires visionOS 26 or later; view controls provide inspection on earlier versions.
+
+1. Open `TRACE.xcodeproj` and choose the **TRACE** scheme.
+2. Select an available visionOS simulator. In the studio's More menu, load a synthetic sample or enable synthetic sample input.
+3. For a headset, copy `Configuration/LocalSigning.xcconfig.example` to `Configuration/LocalSigning.xcconfig` and enter your own team and unique bundle identifiers. The local file is ignored by Git.
+4. Pair Vision Pro with Xcode, enable Developer Mode, choose the headset, and run.
+
+No API keys or third-party runtime packages are needed.
 
 ```sh
 swift test
@@ -40,49 +78,37 @@ xcodebuild -project TRACE.xcodeproj -scheme TRACE \
   -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
 ```
 
-Choose an available simulator in Xcode if that destination differs on your Mac. Physical hand input is unavailable in Simulator.
+Choose an available simulator if that destination differs on your Mac. [Verification details](Documentation/Verification.json) separate simulator evidence from physical-headset checks. Real tracking, native ring gestures, comfort, latency, and sustained headset frame rate require a device retest.
 
-For visual previews, simulator-only launch arguments include `--preview-chamber`, `--preview-capture`, `--preview-hand-detail`, and `--preview-flexed`. These do not automatically enter immersion on hardware.
+## Project notes
 
-## Architecture and data
+The recording reference stays fixed when the wearer moves their head. Joint transforms are stage-relative; replay inspection changes a separate presentation hierarchy. Capture uses unpredicted timestamps at no more than 60 samples per second. Display follows RealityKit's rendering update and can use predicted ARKit poses. Inferred transforms retain their original confidence flags.
 
-| Location | Responsibility |
+| Location | What it does |
 | --- | --- |
-| `TRACE/StudioModel.swift` | Recording, countdown, playback, library state, and render clock |
-| `TRACE/Tracking/HandTrackingService.swift` | ARKit permissions, provider lifecycle, joint snapshots, and stable reference |
-| `TRACE/Scene/ChamberScene.swift` | Studio, hand surfaces, gradients, trails, and replay handle |
-| `TRACE/Core/` | Motion schema, interpolation, capture limits, geometry, and synthetic samples |
-| `TRACE/Storage/TakeStore.swift` | Atomic local JSON persistence and deletion |
-| `TRACE/UI/` | Welcome screen, console, and immersive attachments |
-| `TRACE/HandAssets/` | Generic CC0 model buffers; no captured wearer data |
-| `Tests/`, `TRACEUITests/` | Core regression and simulator flow tests |
+| `TRACE/StudioModel.swift` | Recording, playback, loop state, and local library |
+| `TRACE/Scene/ChamberScene.swift` | Countdown meshes, anatomical hands, paths, and inspection pivot |
+| `TRACE/Core/StudyTools.swift` | Loop timing, copy trimming, measurements, paths, and serialization |
+| `TRACE/UI/` | Console, review tools, welcome screen, and file export |
+| `TRACE/Tracking/`, `TRACE/Storage/` | ARKit lifecycle and local persistence |
+| `Tests/`, `TRACEUITests/` | Core regressions and simulator workflows |
 
-Joint transforms are stored in stage-relative meters. TRACE freezes a yaw-only reference from the initial device pose; head movement and replay dragging do not rebase recorded motion. Playback interpolates translations and quaternions, preserves confidence flags, and hides whole-hand tracking loss and long gaps.
+[Research and next experiments](Documentation/Research.md) explains the choices and sketches comparison, pose bookmarks, dataset labeling, animation import, and offline robotics retargeting. TRACE's export is human motion data. It does not control a robot or claim compatibility with a robot-training dataset.
 
-The display follows a RealityKit rendering-phase system and can use ARKit-predicted anchors. Recording uses unpredicted snapshots, actual timestamps, and a maximum cadence of 60 samples per second. Inferred joints retain their low-confidence flags. Brief display continuity is never written back as measured motion. Actual headset frame rate and latency have not been measured.
+## Public-source checks
 
-Studies are saved in the app container. TRACE has no networking client, analytics, camera-frame capture, audio recording, or cloud-sync implementation. See [PRIVACY.md](PRIVACY.md) for the exact stored fields, retention, deletion, and operating-system backup limitations.
-
-## Validation and limitations
-
-The latest results are summarized in [Verification.json](Documentation/Verification.json). Simulator screenshots use synthetic data. Raw build/device logs are excluded because they may contain personal paths, signing identities, and device identifiers.
-
-The prototype cannot recover a hand fully hidden from headset sensors and does not track another person's hands. Closed fists and contact poses have synthetic geometry regressions, but require additional wearer testing. Native timeline dragging, replay movement, and distance feedback also require physical input validation. There is no scientific accuracy score, robotics export/control, cloud sharing, video export, or multi-user mode.
-
-## Before publishing changes
+Enable the local privacy hook and inspect the staged files before pushing:
 
 ```sh
 git config --local core.hooksPath .githooks
 python3 Scripts/audit_public.py --staged
+python3 Scripts/audit_public.py --history
 ```
 
-Use a public account alias and a GitHub-provided noreply address for your local commit identity. Review `git diff --cached` and `git status --short` before pushing. The hook inspects the exact staged bytes. For a full local history check, run `python3 Scripts/audit_public.py --history` and Gitleaks with redaction enabled.
+Use a public alias and GitHub noreply email for commits. Keep personal signing, captures, logs, credentials, and compiled builds out of Git. Export tracked source with `git archive` rather than zipping a development folder that may contain ignored private settings.
 
-An inactive GitHub Actions template is included at `Documentation/Tools/privacy-workflow.yml`. It runs the publication guard and a checksum-pinned Gitleaks scan with read-only repository permissions. The publishing connection could not create active workflows, so automated GitHub checks are not enabled. To enable them later, place the template at `.github/workflows/privacy.yml` using a connection with workflow-write permission.
+The GitHub Actions privacy workflow is an inactive template at `Documentation/Tools/privacy-workflow.yml`; the publishing connection does not have workflow-write permission. Local publication and credential scans are run before release. [Publication audit](Documentation/SecurityAudit.md).
 
-Do not commit `LocalSigning.xcconfig`, credentials, signed builds, provisioning profiles, device logs, recordings, or personal screenshots. A `.gitignore` does not remove already tracked files or old commits. Export only tracked files, for example using `git archive`; do not zip the entire development folder, which can contain ignored private settings. See [the publication audit](Documentation/SecurityAudit.md) for the reviewed snapshot and outstanding remote-history item.
+## Hand assets
 
-## Third-party assets
-
-The generic hand models are CC0 assets by **Miodrag Sejic / DigitalN8m4r3** from Godot XR Tools. The exact source revision, original glTF files, license, modifications, and offline conversion script are included under `Documentation/ThirdParty/` and `Documentation/Tools/`. This credit identifies the asset creator, not the app's developer. No skin-color or skin-normal textures are bundled in the app.
-
+The generic anatomical models are CC0 assets by Miodrag Sejic / DigitalN8m4r3 from Godot XR Tools. Original glTF files, the source revision, license, modifications, and an offline converter are in `Documentation/ThirdParty/` and `Documentation/Tools/`. No skin-color or skin-normal textures are bundled in the app.

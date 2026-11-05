@@ -7,7 +7,7 @@ import QuartzCore
 final class StudioModel {
     enum Phase: String { case idle, countdown, recording, review }
     enum ConsoleMode { case capture, playback }
-    enum Panel { case options, studies, hands }
+    enum Panel { case options, studies, hands, view, loop, insights }
     var panel: Panel?
     var consoleMode: ConsoleMode = .capture
     let tracking = HandTrackingService()
@@ -23,6 +23,16 @@ final class StudioModel {
     var isPlaying = false
     var playhead: Double = 0
     var speed: Double = 1
+    var loopEnabled = false
+    var loopStart: Double = 0
+    var loopEnd: Double = 0
+    var reversePlayback = false
+    var exportRequested = false
+    var viewYaw: Double = 0
+    var viewPitch: Double = 0
+    var viewScale: Double = 1
+    var showMotionPaths = false
+    private(set) var motionSummaries: [HandMotionSummary] = []
     var countdown = 3
     var recordingElapsed: Double = 0
     var notice = "Your next movement can become a sculpture."
@@ -39,6 +49,7 @@ final class StudioModel {
     #if targetEnvironment(simulator)
     let isSimulator = true
     var sampleInput = false
+    var previewCountdown = false
     #else
     let isSimulator = false
     let sampleInput = false
@@ -57,6 +68,9 @@ final class StudioModel {
     @ObservationIgnored private(set) var liveHands: [HandPose] = []
 
     var duration: Double { selectedTake?.duration ?? 0 }
+    var playbackRegion: PlaybackRegion {
+        .init(start: loopEnabled ? loopStart : 0, end: loopEnabled ? loopEnd : duration, duration: duration)
+    }
     var canRecord: Bool { phase != .countdown && phase != .recording && (sampleInput || (tracking.status == .running && selectionTracked)) }
     var sourceLabel: String { sampleInput ? "SAMPLE INPUT · SIMULATOR" : tracking.status.label }
     var selectionTracked: Bool {
@@ -79,6 +93,7 @@ final class StudioModel {
     func enter() async {
         appliedCalibration = false; introVisible = true; panel = nil; sampleStart = CACurrentMediaTime()
         renderer.reset()
+        if let selectedTake { renderer.configureStudy(selectedTake); applyInspection() }
         guard renderer.renderIssue == nil else { notice = renderer.renderIssue!; return }
         startClock()
         if !isSimulator { await tracking.start() }
@@ -122,7 +137,8 @@ final class StudioModel {
             phase = selectedTake == nil ? .idle : .review
             notice = "No usable hand movement was captured. Bring a hand into view and try again."; return
         }
-        selectedTake = take; panel = nil; phase = .review; consoleMode = .playback; playhead = 0; isPlaying = false
+        phase = .review
+        select(take)
         takes.insert(take, at: 0); renderer.clearTrails(); renderer.revealGhosts(reduceMotion: motionReduced)
         notice = "\(take.source == .simulatorSample ? "Sample capture" : "Your movement") is ready. Saving locally…"
         let task = Task { [weak self] in
@@ -142,25 +158,56 @@ final class StudioModel {
     func select(_ take: MotionTake) {
         guard phase != .recording, phase != .countdown else { return }
         selectedTake = take; panel = nil; phase = .review; consoleMode = .playback; playhead = 0; isPlaying = false; practice = false; saveError = nil
-        if immersiveOpen { resetStage(); renderer.clearTrails(); renderer.revealGhosts(reduceMotion: motionReduced) }
-        else { stageMoved = false; dragOrigin = nil }
+        loopStart = 0; loopEnd = take.duration; loopEnabled = false; reversePlayback = false
+        viewYaw = 0; viewPitch = 0; viewScale = 1; showMotionPaths = false
+        motionSummaries = HandSide.allCases.filter(take.selection.includes).map { MotionAnalysis.summary(take, side: $0) }
+        renderer.configureStudy(take); resetStage(); renderer.clearTrails()
+        if immersiveOpen { renderer.revealGhosts(reduceMotion: motionReduced) }
         notice = take.source == .simulatorSample ? "Synthetic sample · never a real hand recording." : "Recorded \(take.createdAt.formatted(date: .abbreviated, time: .shortened))."
     }
     func togglePlayback() {
         guard selectedTake != nil else { return }
         introVisible = false
-        if playhead >= duration { playhead = 0; renderer.clearTrails() }
+        let region = playbackRegion
+        if reversePlayback ? playhead <= region.start : playhead >= region.end {
+            playhead = reversePlayback ? region.end : region.start; renderer.clearTrails()
+        }
         isPlaying.toggle(); notice = isPlaying ? "Following time at \(speed.formatted())×." : "Playback paused. Scrub to explore."
     }
-    func restart() { guard selectedTake != nil else { return }; playhead = 0; isPlaying = true; renderer.clearTrails() }
+    func restart() { guard selectedTake != nil else { return }; playhead = reversePlayback ? playbackRegion.end : playbackRegion.start; isPlaying = true; renderer.clearTrails() }
     func scrub(_ time: Double) { isPlaying = false; playhead = min(max(0, time), duration); renderer.clearTrails() }
-    func resetStage() { renderer.resetPlaybackTransform(); stageMoved = false; dragOrigin = nil }
+    func resetStage() {
+        renderer.resetPlaybackTransform(); viewYaw = 0; viewPitch = 0; viewScale = 1
+        stageMoved = false; dragOrigin = nil
+    }
+    func applyInspection() { renderer.setInspection(yaw: viewYaw, pitch: viewPitch, scale: viewScale); renderer.clearTrails() }
+    func turnBy(_ degrees: Double) { viewYaw = (viewYaw + degrees + 360).truncatingRemainder(dividingBy: 360); applyInspection() }
+    func viewPreset(yaw: Double, pitch: Double = 0) { viewYaw = yaw; viewPitch = pitch; applyInspection() }
+    func markLoopStart() { loopStart = min(playhead, max(0, loopEnd - 0.1)); isPlaying = false }
+    func markLoopEnd() { loopEnd = max(playhead, min(duration, loopStart + 0.1)); isPlaying = false }
+    func resetLoop() { loopStart = 0; loopEnd = duration; loopEnabled = false }
+    func toggleLoop() {
+        loopEnabled.toggle()
+        if loopEnabled { playhead = min(max(playhead, loopStart), loopEnd) }
+    }
+    func saveTrimmedStudy() {
+        guard let original = selectedTake,
+              let copy = MotionEditing.trimmed(original, region: .init(start: loopStart, end: loopEnd, duration: duration)) else {
+            notice = "Choose at least a tenth of a second with usable hand data."; return
+        }
+        takes.insert(copy, at: 0); select(copy)
+        saveTasks.append(Task {
+            do { try await store.save(copy); savedTakeIDs.insert(copy.id); notice = "Selection saved as a new study." }
+            catch { saveError = "Save failed: \(error.localizedDescription)" }
+        })
+    }
     func dragPlayback(_ delta: SIMD3<Float>, ended: Bool) {
         guard selectedTake != nil, phase == .review, !practice else { return }
         if dragOrigin == nil { dragOrigin = renderer.playbackRoot.position }
-        var p = (dragOrigin ?? .zero) + delta
-        p.x = min(max(p.x, -0.65), 0.65); p.y = min(max(p.y, -0.25), 0.35); p.z = min(max(p.z, -0.5), 0.3)
-        renderer.playbackRoot.position = p; stageMoved = simd_length(p) > 0.001
+        let center = renderer.inspectionCenter
+        var offset = (dragOrigin ?? center) + delta - center
+        offset.x = min(max(offset.x, -0.65), 0.65); offset.y = min(max(offset.y, -0.25), 0.35); offset.z = min(max(offset.z, -0.5), 0.3)
+        renderer.playbackRoot.position = center + offset; stageMoved = simd_length(offset) > 0.001
         renderer.clearTrails()
         if ended { dragOrigin = nil }
     }
@@ -197,7 +244,12 @@ final class StudioModel {
         if trackedHandMask != mask { trackedHandMask = mask }
         let count = liveHands.filter(\.tracked).count
         if trackedHands != count { trackedHands = count }
-        if phase == .countdown {
+        #if targetEnvironment(simulator)
+        let advancesCountdown = !previewCountdown
+        #else
+        let advancesCountdown = true
+        #endif
+        if phase == .countdown && advancesCountdown {
             let elapsed = now - countdownStart
             let next = max(1, Int(ceil(3 - elapsed))); if countdown != next { countdown = next }
             if elapsed >= 3 {
@@ -219,12 +271,16 @@ final class StudioModel {
             if elapsed >= 10 || (!sampleInput && tracking.status != .running) { finishRecording() }
         }
         if isPlaying, selectedTake != nil {
-            playhead = min(playhead + delta * speed, duration)
-            if playhead >= duration { isPlaying = false; notice = "End of study. Replay or record another movement." }
+            let result = playbackRegion.advanced(from: playhead, by: delta, speed: speed, reverse: reversePlayback, loops: loopEnabled)
+            if (reversePlayback && result.time > playhead) || (!reversePlayback && result.time < playhead) { renderer.clearTrails() }
+            playhead = result.time
+            if result.finished { isPlaying = false; notice = "End of study. Replay or record another movement." }
         }
+        renderer.showCountdown(phase == .countdown ? countdown : nil)
+        renderer.showPaths(showMotionPaths && phase == .review && consoleMode == .playback && !practice)
         let ghost = selectedTake.map { MotionSampler.hands(in: $0, at: playhead) } ?? []
         let displayHands = sampleInput ? liveHands : tracking.displaySnapshot(at: now)
-        let feedback = renderer.update(live: displayHands, ghost: phase == .review && consoleMode == .playback ? ghost : [], recording: phase == .recording, countdown: phase == .countdown, playing: isPlaying, practice: practice, now: now, reduceMotion: motionReduced)
+        let feedback = renderer.update(live: displayHands, ghost: phase == .review && consoleMode == .playback ? ghost : [], recording: phase == .recording, countdown: phase == .countdown, playing: isPlaying, practice: practice, now: now, reduceMotion: motionReduced, allowManipulation: panel == nil || panel == .view, showGhostHands: panel == nil || panel == .view || panel == .loop)
         if nearTips != feedback.near { nearTips = feedback.near }; if comparedTips != feedback.total { comparedTips = feedback.total }
     }
 }

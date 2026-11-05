@@ -3,6 +3,7 @@ import SwiftUI
 struct ConsoleView: View {
     @Bindable var studio: StudioModel
     let exit: () -> Void
+    let export: () -> Void
     private var busy: Bool { studio.phase == .recording || studio.phase == .countdown }
     private var playbackVisible: Bool { studio.consoleMode == .playback && !busy && studio.selectedTake != nil }
 
@@ -14,6 +15,7 @@ struct ConsoleView: View {
                 case .options: optionsPanel
                 case .studies: studiesPanel
                 case .hands: handsPanel
+                case .view, .loop, .insights: StudyToolsPanel(studio: studio, panel: panel, export: export)
                 }
             } else {
                 header
@@ -94,14 +96,9 @@ struct ConsoleView: View {
         }
     }
     private var countdown: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("Ready in \(studio.countdown)").font(.system(size: 28, weight: .medium)).monospacedDigit()
-                Spacer()
-                Text("Keep your hands in view").font(.system(size: 14)).foregroundStyle(TraceStyle.blue)
-            }
-            Button("Cancel") { studio.cancelCountdown() }.buttonStyle(.bordered).frame(maxWidth: .infinity).accessibilityIdentifier("cancelCountdown")
-        }
+        Button("Cancel recording") { studio.cancelCountdown() }
+            .buttonStyle(.bordered).frame(maxWidth: .infinity, minHeight: 48)
+            .accessibilityValue("\(studio.countdown) seconds remaining").accessibilityIdentifier("cancelCountdown")
     }
     private var recording: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -140,14 +137,24 @@ struct ConsoleView: View {
                         .font(.system(size: 17, weight: .semibold)).frame(maxWidth: .infinity, minHeight: 48)
                 }.buttonStyle(.borderedProminent).buttonBorderShape(.capsule).tint(TraceStyle.graphite).foregroundStyle(.white).accessibilityIdentifier("playPause")
                 Button { studio.speed = studio.speed == 1 ? 0.5 : 1 } label: {
-                    Text(studio.speed == 1 ? "1×" : "0.5×").font(.system(size: 15, weight: .medium)).frame(width: 48, height: 48)
+                    Text("\(studio.speed.formatted())×").font(.system(size: 15, weight: .medium)).frame(width: 48, height: 48)
                 }
                 .buttonStyle(.bordered).buttonBorderShape(.circle).accessibilityLabel("Playback speed")
-                .accessibilityValue(studio.speed == 1 ? "1×" : "0.5×").accessibilityIdentifier("playbackSpeed")
+                .accessibilityValue("\(studio.speed.formatted())×").accessibilityIdentifier("playbackSpeed")
                 .help("Switch between normal and half speed")
 
             }
+            HStack(spacing: 10) {
+                tool("View", symbol: "rotate.3d", panel: .view, id: "viewTools")
+                tool(studio.loopEnabled ? "Loop on" : "Loop", symbol: "repeat", panel: .loop, id: "loopTools")
+                tool("Insights", symbol: "waveform.path", panel: .insights, id: "insightTools")
+            }
         }
+    }
+    private func tool(_ title: String, symbol: String, panel: StudioModel.Panel, id: String) -> some View {
+        Button { studio.openPanel(panel) } label: {
+            Label(title, systemImage: symbol).font(.system(size: 14, weight: .medium)).frame(maxWidth: .infinity, minHeight: 44)
+        }.buttonStyle(.bordered).buttonBorderShape(.capsule).accessibilityIdentifier(id)
     }
     private var footer: some View {
         HStack(spacing: 16) {
@@ -170,10 +177,20 @@ struct ConsoleView: View {
         HStack(spacing: 16) {
             Button { studio.panel = nil } label: { Image(systemName: "chevron.left").frame(width: 44, height: 44) }
                 .buttonStyle(.bordered).buttonBorderShape(.circle).accessibilityLabel("Back to studio").accessibilityIdentifier("closePanel")
-            Text(panel == .options ? "Studio options" : (panel == .studies ? "Saved studies" : "Hands to record")).font(.system(size: 22, weight: .medium))
+            Text(panelTitle(panel)).font(.system(size: 22, weight: .medium))
             Spacer()
             Button(action: exit) { Image(systemName: "xmark").frame(width: 44, height: 44) }
                 .buttonStyle(.bordered).buttonBorderShape(.circle).accessibilityLabel("Exit chamber").accessibilityIdentifier("exitChamber")
+        }
+    }
+    private func panelTitle(_ panel: StudioModel.Panel) -> String {
+        switch panel {
+        case .options: "Studio options"
+        case .studies: "Saved studies"
+        case .hands: "Hands to record"
+        case .view: "Look around your motion"
+        case .loop: "Find a moment"
+        case .insights: "Motion insights"
         }
     }
     private var optionsPanel: some View {
@@ -181,6 +198,7 @@ struct ConsoleView: View {
             if playbackVisible {
                 option("Reset sculpture", symbol: "arrow.counterclockwise") { studio.resetStage() }
                 option(studio.practice ? "End practice" : "Practice with this study", symbol: "hand.draw") { studio.togglePractice() }
+                option("Export study", symbol: "square.and.arrow.up", id: "exportStudy", action: export)
             }
             option("How to use TRACE", symbol: "questionmark.circle") { studio.introVisible = true }
             if !studio.isSimulator { option("Retry hand tracking", symbol: "arrow.clockwise") { Task { await studio.retryTracking() } } }
@@ -217,7 +235,7 @@ struct ConsoleView: View {
                             Button { studio.select(take) } label: {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 6) {
-                                        Text(take.source == .simulatorSample ? "Sample capture" : "Motion study").font(.system(size: 17, weight: .medium))
+                                        Text(take.title).font(.system(size: 17, weight: .medium))
                                         Text(take.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 13)).foregroundStyle(TraceStyle.blue)
                                     }
                                     Spacer()

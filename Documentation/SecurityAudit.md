@@ -1,6 +1,6 @@
 # Public-repository privacy audit
 
-Audit date: **2026-10-24**. Scope: the complete TRACE source distribution, build configuration, tests, documentation, images, bundled hand assets, prepared local Git history, and all advertised branches/tags of the linked GitHub repository.
+Original publication audit: **2026-10-24**. The sections below describe the 0.1 publication. The 0.2 update is covered by the addendum at the end. Scope: the complete TRACE source distribution, build configuration, tests, documentation, images, bundled hand assets, prepared local Git history, and all advertised branches/tags of the linked GitHub repository.
 
 ## Result
 
@@ -61,3 +61,15 @@ Replacing branch history cannot erase copies already cloned or all cached commit
 ## Limits
 
 This audit assesses publication privacy and credential exposure in the reviewed snapshot. Pattern scanners cannot prove that arbitrary future files contain no sensitive data. It is not a penetration test or a certification of hand-tracking accuracy, headset performance, or production readiness. Public GitHub ownership, the account alias, and upstream asset credit remain visible by design.
+
+## 0.2 update, 5 November 2026
+
+The update adds countdown meshes, inspection transforms, loop editing, measurements, fingertip paths, and explicit CSV/JSON export. It introduces no runtime networking client, credentials, analytics, robot connection, or automatic data transfer. Export uses the system file picker after a deliberate action. Privacy documentation and the hand-permission explanation now describe that choice.
+
+The current publication set contains 65 files. Six new images are direct captures of synthetic simulator data. They were visually reviewed and their nonessential metadata removed without changing the compressed pixels. A black transition frame was rejected and recaptured. The original hand-model buffers and third-party attribution remain unchanged.
+
+The staged-file publication guard reports zero findings, and Gitleaks reports no credentials. The source checksum manifest is regenerated for this update. Personal signing, device identifiers, raw logs, test result bundles, builds, and the attached device screenshot are excluded from the public source.
+
+Validation includes 35 passing core tests and three passing simulator UI cases. The UI cases cover recording and persistence, inspection and selection copying, and native CSV/JSON picker presentation and cancellation. A fresh accessibility snapshot checks the immersive-to-window handoff because Xcode 27 can retain the old query root. The final source also compiles for a generic physical visionOS target in Release without signing.
+
+The 0.2 build has not been installed or tested on a physical headset during this update. Native ring gestures, tracking quality, comfort, and headset frame rate still require that check. No personal signing information is needed to reproduce the simulator checks. The inactive GitHub workflow and the retained old unreferenced-commit limitation from the original publication are unchanged.

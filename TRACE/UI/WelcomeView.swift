@@ -38,6 +38,7 @@ struct WelcomeView: View {
         .task {
             #if targetEnvironment(simulator)
             if CommandLine.arguments.contains("--preview-chamber") { await enterChamber() }
+            if CommandLine.arguments.contains("--preview-export") { studio.loadSample(); studio.exportRequested = true }
             #endif
         }
     }
