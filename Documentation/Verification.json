@@ -128,7 +128,8 @@
       "Images/insights-02.png",
       "Images/export-02.png"
     ],
-    "currentMethod": "Direct captures from an isolated simulator with synthetic data; all six images visually inspected; ancillary metadata removed without changing pixel payloads"
+    "currentMethod": "Direct captures from an isolated simulator with synthetic data; all six images visually inspected; ancillary metadata removed without changing pixel payloads",
+    "contrastFollowUp": "Explicit charcoal controls and a white export page; simulator compile and direct screenshot review after the successful functional suite"
   },
   "handModel": {
     "type": "generic anatomical model retargeted from measured joint positions",

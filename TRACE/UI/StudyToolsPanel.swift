@@ -37,6 +37,7 @@ struct StudyToolsPanel: View {
             HStack {
                 Text("Size")
                 Slider(value: $studio.viewScale, in: 0.5...2, onEditingChanged: { _ in studio.applyInspection() })
+                    .tint(TraceStyle.graphite)
                     .onChange(of: studio.viewScale) { _, _ in studio.applyInspection() }.accessibilityIdentifier("viewScale")
                 Text("\(studio.viewScale.formatted(.number.precision(.fractionLength(1))))×").monospacedDigit().frame(width: 44)
             }.font(.system(size: 14))
@@ -50,7 +51,7 @@ struct StudyToolsPanel: View {
     private func adjustment(_ label: String, value: Binding<Double>, range: ClosedRange<Double>, suffix: String, id: String) -> some View {
         HStack {
             Text(label).frame(width: 35, alignment: .leading)
-            Slider(value: value, in: range).onChange(of: value.wrappedValue) { _, _ in studio.applyInspection() }.accessibilityLabel(label).accessibilityIdentifier(id)
+            Slider(value: value, in: range).tint(TraceStyle.graphite).onChange(of: value.wrappedValue) { _, _ in studio.applyInspection() }.accessibilityLabel(label).accessibilityIdentifier(id)
             Text("\(Int(value.wrappedValue))\(suffix)").monospacedDigit().frame(width: 44)
         }.font(.system(size: 14))
     }
@@ -63,6 +64,7 @@ struct StudyToolsPanel: View {
                 Text(String(format: "Selection %.1f to %.1f s", studio.loopStart, studio.loopEnd)).font(.system(size: 14)).foregroundStyle(TraceStyle.blue).accessibilityIdentifier("loopRange")
             }
             Slider(value: Binding(get: { studio.playhead }, set: { studio.scrub($0) }), in: 0...max(0.01, studio.duration))
+                .tint(TraceStyle.graphite)
                 .accessibilityLabel("Choose a moment").accessibilityIdentifier("loopTimeline")
             HStack {
                 Button("Back 0.5 s") { studio.scrub(studio.playhead - 0.5) }.accessibilityIdentifier("loopStepBack")
@@ -73,9 +75,18 @@ struct StudyToolsPanel: View {
             }.font(.system(size: 14)).buttonStyle(.bordered)
             Toggle("Loop selection", isOn: Binding(get: { studio.loopEnabled }, set: { _ in studio.toggleLoop() })).accessibilityIdentifier("loopEnabled")
             Toggle("Play backwards", isOn: $studio.reversePlayback).accessibilityIdentifier("reversePlayback")
-            Picker("Speed", selection: $studio.speed) {
-                ForEach([0.25, 0.5, 1.0, 2.0], id: \.self) { speed in Text("\(speed.formatted())×").tag(speed) }
-            }.pickerStyle(.segmented).accessibilityIdentifier("studySpeed")
+            HStack(spacing: 4) {
+                ForEach([0.25, 0.5, 1.0, 2.0], id: \.self) { speed in
+                    Button { studio.speed = speed } label: {
+                        Text("\(speed.formatted())×").font(.system(size: 14, weight: .medium))
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .foregroundStyle(studio.speed == speed ? Color.white : TraceStyle.chalk)
+                            .background(studio.speed == speed ? TraceStyle.graphite : .clear, in: Capsule())
+                    }.buttonStyle(.plain)
+                        .accessibilityLabel("\(speed.formatted()) times playback speed")
+                        .accessibilityAddTraits(studio.speed == speed ? .isSelected : [])
+                }
+            }.padding(4).background(.black.opacity(0.045), in: Capsule())
             HStack {
                 Button("Reset selection") { studio.resetLoop() }.buttonStyle(.bordered).accessibilityIdentifier("resetLoop")
                 Spacer()

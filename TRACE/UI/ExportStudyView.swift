@@ -27,18 +27,19 @@ struct ExportStudyView: View {
             }
             if let take = studio.selectedTake {
                 Text("\(take.title) · \(take.duration.formatted(.number.precision(.fractionLength(1)))) seconds")
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).foregroundStyle(TraceStyle.blue)
                 HStack(spacing: 16) {
                     exportButton("CSV", detail: "Joint rows for spreadsheets and scripts", type: .commaSeparatedText, id: "exportCSV")
                     exportButton("JSON", detail: "Complete study with tracking confidence", type: .json, id: "exportJSON")
                 }
                 Text(take.source == .simulatorSample ? "This study contains synthetic simulator data." : "This file contains your recorded hand movement.")
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.callout).foregroundStyle(TraceStyle.blue)
                 Text("Coordinates stay in the original stage, in meters. Turning the replay does not change the export. No video or audio is included.")
-                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.callout).foregroundStyle(TraceStyle.blue).fixedSize(horizontal: false, vertical: true)
                 Text(message).font(.callout).accessibilityIdentifier("exportStatus")
-            } else { Text("Select a study in the studio first.").foregroundStyle(.secondary) }
+            } else { Text("Select a study in the studio first.").foregroundStyle(TraceStyle.blue) }
         }.padding(30).frame(width: 560)
+        .foregroundStyle(TraceStyle.chalk).background(TraceStyle.paper)
         .fileExporter(isPresented: $exporting, document: document, contentType: contentType, defaultFilename: filename) { result in
             switch result {
             case .success: message = "Export saved. Your study is still on this device."

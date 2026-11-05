@@ -34,6 +34,7 @@ struct ConsoleView: View {
         }
         .padding(24).frame(width: 560)
         .foregroundStyle(TraceStyle.chalk)
+        .environment(\.colorScheme, .light)
         .background(TraceStyle.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 32))
         .overlay { RoundedRectangle(cornerRadius: 32).strokeBorder(.black.opacity(0.07), lineWidth: 1) }
         .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 32))
